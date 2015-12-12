@@ -1,0 +1,42 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Neo.JsonSerializer", "JsonSerializer\Neo.JsonSerializer.csproj", "{7264582B-BF17-4F30-8F0A-A0C8C01851DB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Neo.JSonSerializerTest", "JSonSerializerTest\Neo.JSonSerializerTest.csproj", "{F7476204-B7C3-4061-880B-1EFC401C3216}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{2636E01B-C322-4451-B85A-419D1AA88E07}"
+	ProjectSection(SolutionItems) = preProject
+		JsonSerializer.vsmdi = JsonSerializer.vsmdi
+		Local.testsettings = Local.testsettings
+		TraceAndTestImpact.testsettings = TraceAndTestImpact.testsettings
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Neo.Performance.Test", "Neo.Performance.Test\Neo.Performance.Test.csproj", "{4D9AB85A-61E0-4B1B-BCDF-EA3C5A8BADE8}"
+EndProject
+Global
+	GlobalSection(TestCaseManagementSettings) = postSolution
+		CategoryFile = JsonSerializer.vsmdi
+	EndGlobalSection
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7264582B-BF17-4F30-8F0A-A0C8C01851DB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7264582B-BF17-4F30-8F0A-A0C8C01851DB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7264582B-BF17-4F30-8F0A-A0C8C01851DB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7264582B-BF17-4F30-8F0A-A0C8C01851DB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F7476204-B7C3-4061-880B-1EFC401C3216}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F7476204-B7C3-4061-880B-1EFC401C3216}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F7476204-B7C3-4061-880B-1EFC401C3216}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F7476204-B7C3-4061-880B-1EFC401C3216}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4D9AB85A-61E0-4B1B-BCDF-EA3C5A8BADE8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4D9AB85A-61E0-4B1B-BCDF-EA3C5A8BADE8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4D9AB85A-61E0-4B1B-BCDF-EA3C5A8BADE8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4D9AB85A-61E0-4B1B-BCDF-EA3C5A8BADE8}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
