@@ -9,10 +9,11 @@ namespace DI.Map
     public class InformationType
     {
         public string FullName { get; set; }
+        [XmlIgnore]
         public string Assembly { get; set; }
         [XmlIgnore]
         public Type Type { get; set; }
-
+        
         public bool IsInterface { get { return Type.IsInterface; } set { } }
 
         public InformationType(Type type)

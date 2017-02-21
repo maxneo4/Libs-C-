@@ -27,7 +27,7 @@ namespace DI.Test
             injector = Injector.GetInstance();
             injector.BindParameters.AddConstructorParameters("Ionic.Zip.ZipFile", "ZipFileTest.zip");            
         }
-
+               
         [TestMethod]
         public void TestCreationWithReflection()
         {

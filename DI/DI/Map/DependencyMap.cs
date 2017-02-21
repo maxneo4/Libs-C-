@@ -12,6 +12,7 @@ namespace DI.Map
     public class DependencyMap
     {
         private static Hashtable _hashMapConcretTypes = new Hashtable();
+        private static string[] _fullNameInterfacesToExclude = null;
 
         public InjectionMap Root { get; set; }
         public List<string> UsedAssemblies { get; set; }
@@ -21,13 +22,24 @@ namespace DI.Map
             UsedAssemblies = new List<string>();            
         }
 
-        public static DependencyMap GetDependencyMap<T>()
+        public static DependencyMap GetDependencyMap<T>(params string[] fullNameInterfacesToExclude)
         {
+            Assembly[] loadedAssemblies = AppDomain.CurrentDomain.GetAssemblies();
+            loadedAssemblies = loadedAssemblies.Where(a => !a.GlobalAssemblyCache).ToArray();
+            IndexImplementations(loadedAssemblies);
+            _fullNameInterfacesToExclude = fullNameInterfacesToExclude;
+            foreach (string classToExclude in fullNameInterfacesToExclude)
+            {
+                _hashMapConcretTypes.Remove(classToExclude);
+            }
             Type type = typeof(T);
             DependencyMap dependencyMap = new DependencyMap();
             dependencyMap.Root = new InjectionMap();
             dependencyMap.Root.InterfaceType = new InformationType(type);
             dependencyMap.Root.RegisterAssembly = dependencyMap.UsedAssemblies;
+
+            ResolveImplementation(dependencyMap.Root);
+
             GetDependencyMap(dependencyMap.Root);
             return dependencyMap;
         }
@@ -59,12 +71,9 @@ namespace DI.Map
         {
             ResolveImplementationFromOwnAssembly(implementation);
             if (implementation.ClassType == null)
-            {
-                Assembly[] loadedAssemblies = AppDomain.CurrentDomain.GetAssemblies();
-                loadedAssemblies = loadedAssemblies.Where(a => !a.GlobalAssemblyCache).ToArray();
-                IndexImplementations(loadedAssemblies);
+            {               
                 Type type = implementation.InterfaceType.Type;
-                Type implementationType = (Type)_hashMapConcretTypes[type.FullName];
+                Type implementationType = (Type)_hashMapConcretTypes[type.FullName];                
                 if(implementationType!=null)
                     implementation.ClassType = new InformationType(implementationType);
             }
@@ -91,7 +100,7 @@ namespace DI.Map
             Type[] assemblyTypes = typeAssembly.GetTypes();
             foreach (Type t in assemblyTypes)
             {
-                if (type.IsAssignableFrom(t) && !t.IsAbstract && !t.IsInterface)
+                if (type.IsAssignableFrom(t) && !t.IsAbstract && !t.IsInterface && !_fullNameInterfacesToExclude.Contains(type.FullName))
                 {
                     implementation.ClassType = new InformationType(t);
                     break;
