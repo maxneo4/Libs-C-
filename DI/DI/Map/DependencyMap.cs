@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Collections;
 using System.Xml.Serialization;
 using System.IO;
+using DI.App;
 
 namespace DI.Map
 {
@@ -52,6 +53,20 @@ namespace DI.Map
                 xmlSerializer.Serialize(textWriter, dependencyMap);
                 return textWriter.ToString();
             }
+        }
+
+        public static FileInfo[] LoadAllAssembliesInSamePath()
+        {
+            IModule moduleTest = new DI.App.Module("allDlls");
+            string path = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+            DirectoryInfo di = new DirectoryInfo(path);
+            FileInfo[] fls = di.GetFiles("*.dll");
+            foreach (FileInfo fis in fls)
+                moduleTest.RegisterAssembly(fis.Name);
+            IApplication application = new Application();
+            application.RegisterModule(moduleTest);
+            application.Load();
+            return fls;
         }
 
         private static void GetDependencyMap(InjectionMap implementation)
