@@ -18,10 +18,10 @@ namespace DynamicCommandForm
         static void Main(string[] args)
         {
             Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
+            Application.SetCompatibleTextRenderingDefault(false);            
             try { 
                 Form form = BuildForm(args);
-                form.FormClosed += Form_FormClosed;                
+                form.FormClosed += Form_FormClosed;
                 Application.Run(form);
             }
             catch (Exception ex)
@@ -149,6 +149,10 @@ namespace DynamicCommandForm
             foreach (KeyValuePair<string, Control> pair in button.DynamicControls)            
                 resultOut[pair.Key] = pair.Value.Text;
             string resultJson = serializer.Serialize(resultOut);
+
+            //Console.OutputEncoding = Encoding.UTF8;
+            Console.Write(resultJson);
+            Console.WriteLine();
             Clipboard.SetText(resultJson);
             Application.Exit();
         }
@@ -164,17 +168,28 @@ namespace DynamicCommandForm
             options.Items.AddRange(inputDef.Options);
             options.TextUpdate += new EventHandler(options_TextUpdate);
             options.Click += Options_Click;
-            //options.LostFocus += Options_LostFocus;
+            options.KeyDown += Options_KeyDown;
 
             return options;
         }
 
-        //private static void Options_LostFocus(object sender, EventArgs e)
-        //{
-        //    AutoCompletedComBobox options = (AutoCompletedComBobox)sender;
-        //    if (!string.IsNullOrEmpty(options.LastText) && !options.Items.Contains(options.LastText))
-        //        options.Items.Add(options.LastText);
-        //}
+        private static void Options_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                AutoCompletedComBobox options = (AutoCompletedComBobox)sender;
+                if (options.Items.Count > 0)
+                {
+                    if(options.SelectedItem != null)
+                        options.Text = options.SelectedItem.ToString();
+                    else
+                        options.Text = options.Items[0].ToString();
+                }
+                else
+                    options.Text = string.Empty;
+                e.Handled = true;
+            }
+        }
 
         private static void Options_Click(object sender, EventArgs e)
         {
@@ -198,6 +213,8 @@ namespace DynamicCommandForm
                 if (filteredItems.Length > 1 || !options.SelectedText.Equals(item))
                     options.DroppedDown = true;
             }
+            if(options.Items.Count == 0)
+                options.DroppedDown = false;
         }
 
         class GuidDefinition
