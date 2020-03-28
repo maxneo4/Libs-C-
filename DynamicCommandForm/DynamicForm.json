@@ -1,0 +1,30 @@
+﻿{
+  "title": "Gui Demo",
+  "buttonText": "Ok",
+  "inputsWidth": 200,
+  "inputs": [
+    { "name": "guid" },
+    {
+      "options": [ "biz-studio", "localhost", "server", "k" ],
+      "name": "server"
+    },
+    {
+      "options": [ "ToR", "dbio", "db468", "empty", "z" ],
+      "name": "db"
+    },
+    {
+      "name": "uid",
+      "value": "uuiiddd"
+    },
+    {
+      "name": "user",
+      "value": "sa"
+    },
+    { "name": "pass" }
+  ],
+  "notes": [
+    "You can change the path of config.json in the first argument",
+    "--clipboard in the first argument take json from clipboard instead of file path config.json",
+    "CANCELED word in result means user cancel action"
+  ]
+}
