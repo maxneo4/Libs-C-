@@ -213,15 +213,17 @@ namespace DynamicCommandForm
                 if (filteredItems.Length > 1 || !options.SelectedText.Equals(item))
                     options.DroppedDown = true;
             }
-            if(options.Items.Count == 0)
-                options.DroppedDown = false;
+            if (options.Items.Count == 0)
+            {
+                options.Items.Add(item);
+            }
         }
 
         class GuidDefinition
         {
-            public string Title { get; set; }
-            public string ButtonText { get; set; }
-            public int InputsWidth { get; set; }
+            public string Title { get; set; } = "Dynamic form";
+            public string ButtonText { get; set; } = "Ok";
+            public int InputsWidth { get; set; } = 200;
             public Input[] Inputs { get; set; }
         }
 
