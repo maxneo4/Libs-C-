@@ -24,7 +24,8 @@
   ],
   "notes": [
     "You can change the path of config.json in the first argument",
-    "--clipboard in the first argument take json from clipboard instead of file path config.json",
-    "CANCELED word in result means user cancel action"
+    "--clipboard in the first argument take json from clipboard instead of file path config.json, also put the result in clipboard",
+    "--input in the first argument take json from standard input stream with method ReadToEnd(), DONT FORGET to close standar input to avoid pogram blocks forever",
+    "CANCELED word in result means user cancel action (close window)"
   ]
 }

@@ -4,6 +4,7 @@ using System.Windows.Forms;
 using System.Web.Script.Serialization;
 using System.IO;
 using System.Drawing;
+using System.Text;
 
 namespace DynamicCommandForm
 {
@@ -12,13 +13,18 @@ namespace DynamicCommandForm
         private static JavaScriptSerializer serializer = new JavaScriptSerializer();
         private const string CANCELED = "CANCELED";
         private const string FROM_CLIPBOARD = "--clipboard";
+        private const string FROM_INPUT = "--input";
         private static Font controlFont = new Font(FontFamily.GenericMonospace, 10);
+        private static bool _fromClipboard = false;
 
         [STAThread]
         static void Main(string[] args)
         {
             Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);            
+            Application.SetCompatibleTextRenderingDefault(false);
+            Console.OutputEncoding = Encoding.UTF8;
+            Console.InputEncoding = Encoding.UTF8;
+
             try { 
                 Form form = BuildForm(args);
                 form.FormClosed += Form_FormClosed;
@@ -26,14 +32,30 @@ namespace DynamicCommandForm
             }
             catch (Exception ex)
             {
+                SetOutError(ex);
+            }
+        }
+
+        private static void SetOutError(Exception ex)
+        {
+            if(_fromClipboard)
                 Clipboard.SetText(ex.ToString());
-            }                        
+            Console.Error.WriteLine(ex.ToString());
+            Console.Error.Flush();
+        }
+
+        private static void SetOut(string text)
+        {
+            if(_fromClipboard)
+                Clipboard.SetText(text);
+            Console.WriteLine(text);
+            Console.Out.Flush();
         }
 
         private static void Form_FormClosed(object sender, FormClosedEventArgs e)
         {
             if (e.CloseReason != CloseReason.ApplicationExitCall)
-                Clipboard.SetText(CANCELED);
+                SetOut(CANCELED);
         }
 
         private static Form BuildForm(string[] args)
@@ -41,15 +63,23 @@ namespace DynamicCommandForm
             Form form = new Form();
 
             string inputFile = args.Length>0? args[0] : "DynamicForm.json";
-            bool fromClipboard = args.Length > 0 && FROM_CLIPBOARD.Equals(args[0]);
+            _fromClipboard = args.Length > 0 && FROM_CLIPBOARD.Equals(args[0]);
+            bool fromInput = args.Length > 0 && FROM_INPUT.Equals(args[0]);
             string jsonGuiDef = null;
-            if (fromClipboard)
+            if(fromInput)
+            {
+                jsonGuiDef = Console.In.ReadToEnd();
+            }
+            else if (_fromClipboard)
             {
                 jsonGuiDef = Clipboard.GetText();
-                Clipboard.SetText(CANCELED);
+                SetOut(CANCELED);
             }else
             {
-               jsonGuiDef = File.ReadAllText(inputFile);
+                if (File.Exists(inputFile))
+                    jsonGuiDef = File.ReadAllText(inputFile);
+                else
+                    throw new Exception($"input json file does not exist '{inputFile}' with workingDirectory '{Directory.GetCurrentDirectory()}'");
             }
 
             GuidDefinition guiDef = serializer.Deserialize<GuidDefinition>(jsonGuiDef);
@@ -150,10 +180,7 @@ namespace DynamicCommandForm
                 resultOut[pair.Key] = pair.Value.Text;
             string resultJson = serializer.Serialize(resultOut);
 
-            //Console.OutputEncoding = Encoding.UTF8;
-            Console.Write(resultJson);
-            Console.WriteLine();
-            Clipboard.SetText(resultJson);
+            SetOut(resultJson);
             Application.Exit();
         }
 
