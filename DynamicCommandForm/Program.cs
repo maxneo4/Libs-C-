@@ -106,14 +106,12 @@ namespace DynamicCommandForm
                 panel.RowCount = 2;
                 panel.AutoSize = true;
                 panel.Controls.Add(commandsComboBox,1,1);
-                panel.Controls.Add(BuildDynamicForm(guiDef, guiDef.Commands[defaultCommandOption]),1,2);
+                panel.Controls.Add(BuildDynamicForm(guiDef, guiDef.Commands[defaultCommandOption], defaultCommandOption),1,2);
                 form.Controls.Add(panel);
 
-                commandsComboBox.ChangeItemAction = (string item) => {
-                    if (item == null)
-                        item = commandsComboBox.NextText;
+                commandsComboBox.ChangeItemAction = (string item) => {                   
                     panel.Controls.RemoveAt(1);
-                    panel.Controls.Add(BuildDynamicForm(guiDef, guiDef.Commands[item]), 1, 2);
+                    panel.Controls.Add(BuildDynamicForm(guiDef, guiDef.Commands[item], item), 1, 2);
                 };
             }
             else
@@ -129,7 +127,7 @@ namespace DynamicCommandForm
             return form;
         }
 
-        private static Panel BuildDynamicForm(GuidDefinition guiDef, Input[] inputDefs)
+        private static Panel BuildDynamicForm(GuidDefinition guiDef, Input[] inputDefs, string commandValue = null)
         {            
             TableLayoutPanel panel = BuildPanel(inputDefs);
 
@@ -145,6 +143,7 @@ namespace DynamicCommandForm
             }
             Button button = new OutButton()
             {
+                CommandValue = commandValue,
                 DynamicControls = controlsByName
             };
             button.Text = guiDef.ButtonText;
@@ -207,6 +206,8 @@ namespace DynamicCommandForm
         {
             OutButton button = (OutButton)sender;
             Dictionary<string, string> resultOut = new Dictionary<string, string>();
+            if (!string.IsNullOrEmpty(button.CommandValue))
+                resultOut["commandValue"] = button.CommandValue;
             foreach (KeyValuePair<string, Control> pair in button.DynamicControls)            
                 resultOut[pair.Key] = pair.Value.Text;
             string resultJson = serializer.Serialize(resultOut);
@@ -240,14 +241,15 @@ namespace DynamicCommandForm
                 if (options.Items.Count > 0)
                 {
                     if(options.SelectedItem != null)
-                        options.NextText = options.SelectedItem.ToString();
+                        options.Text = options.SelectedItem.ToString();
                     else
-                        options.NextText = options.Items[0].ToString();
+                        options.Text = options.Items[0].ToString();
                 }
                 else
-                    options.NextText = string.Empty;
-                options.Text = options.NextText;
-                options.ChangeItemAction?.Invoke(options.Text);
+                    options.Text = string.Empty;  
+
+                if(!string.IsNullOrEmpty(options.Text))
+                    options.ChangeItemAction?.Invoke(options.Text);
                 e.Handled = true;
             }
         }
@@ -321,8 +323,6 @@ namespace DynamicCommandForm
                         _toLowerOptions[i] = _options[i]?.ToLowerInvariant();                    
                 } }
 
-            public string NextText { get; internal set; }
-
             public string[] CalculateFilteredOptions(string text)
             {
                 List<string> filtered = new List<string>();
@@ -338,6 +338,7 @@ namespace DynamicCommandForm
 
         class OutButton : Button
         {
+            public string CommandValue { get; set; }
             public Dictionary<string, Control> DynamicControls { get; set; }
         }
     }
