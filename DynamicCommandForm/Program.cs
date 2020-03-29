@@ -5,6 +5,7 @@ using System.Web.Script.Serialization;
 using System.IO;
 using System.Drawing;
 using System.Text;
+using System.Linq;
 
 namespace DynamicCommandForm
 {
@@ -86,9 +87,40 @@ namespace DynamicCommandForm
                        
             form.Text = guiDef.Title;
             form.AutoSize = true;
-                        
-            Panel p = BuildDynamicForm(guiDef);
-            form.Controls.Add(p);
+
+            if(guiDef.Commands != null)
+            {
+                string[] commandOptions = guiDef.Commands.Keys.Select((k) => k).ToArray();
+                string defaultCommandOption = guiDef.CommandValue ?? commandOptions[0];
+                AutoCompletedComBobox commandsComboBox = BuildComboBox(new Input() {
+                    Name = "Commands",
+                    Options = commandOptions,
+                    Value =  defaultCommandOption
+                });                
+                commandsComboBox.Width = guiDef.InputsWidth;                
+                commandsComboBox.SelectedIndexChanged += CommandsComboBox_SelectionChangeValue;
+                commandsComboBox.AllowNewValues = false;
+                TableLayoutPanel panel = new TableLayoutPanel();
+                panel.Location = new Point(5, 5);
+                panel.ColumnCount = 1;
+                panel.RowCount = 2;
+                panel.AutoSize = true;
+                panel.Controls.Add(commandsComboBox,1,1);
+                panel.Controls.Add(BuildDynamicForm(guiDef, guiDef.Commands[defaultCommandOption]),1,2);
+                form.Controls.Add(panel);
+
+                commandsComboBox.ChangeItemAction = (string item) => {
+                    if (item == null)
+                        item = commandsComboBox.NextText;
+                    panel.Controls.RemoveAt(1);
+                    panel.Controls.Add(BuildDynamicForm(guiDef, guiDef.Commands[item]), 1, 2);
+                };
+            }
+            else
+            {
+                Panel p = BuildDynamicForm(guiDef, guiDef.Inputs);
+                form.Controls.Add(p);
+            }            
 
             form.BringToFront();
             form.StartPosition = FormStartPosition.CenterScreen;
@@ -97,9 +129,8 @@ namespace DynamicCommandForm
             return form;
         }
 
-        private static Panel BuildDynamicForm(GuidDefinition guiDef)
-        {
-            Input[] inputDefs = guiDef.Inputs;
+        private static Panel BuildDynamicForm(GuidDefinition guiDef, Input[] inputDefs)
+        {            
             TableLayoutPanel panel = BuildPanel(inputDefs);
 
             Dictionary<string, Control> controlsByName = new Dictionary<string, Control>();
@@ -107,7 +138,7 @@ namespace DynamicCommandForm
             for (int i = 0; i < inputDefs.Length; i++)
             {
                 Input inputDef = inputDefs[i];
-                Label label = BuildLabel(inputDef);
+                Label label = BuildLabel(inputDef.Name);
                 panel.Controls.Add(label, 0, i);
                 Control input = BuildInputControl(guiDef, controlsByName, i, inputDef);
                 panel.Controls.Add(input, 1, i);
@@ -134,13 +165,13 @@ namespace DynamicCommandForm
             return panel;
         }
 
-        private static Label BuildLabel(Input inputDef)
+        private static Label BuildLabel(string text)
         {
             Label label = new Label();
             label.Font = controlFont;
             label.BorderStyle = BorderStyle.Fixed3D;
             label.TextAlign = ContentAlignment.MiddleRight;
-            label.Text = inputDef.Name;
+            label.Text = text;
             return label;
         }
 
@@ -184,15 +215,16 @@ namespace DynamicCommandForm
             Application.Exit();
         }
 
-        private static ComboBox BuildComboBox(Input inputDef)
+        private static AutoCompletedComBobox BuildComboBox(Input inputDef)
         {
-            ComboBox options = new AutoCompletedComBobox()
+            AutoCompletedComBobox options = new AutoCompletedComBobox()
             {
                 AutoCompleteMode = AutoCompleteMode.Suggest,
                 Options = inputDef.Options
             };
             options.Font = controlFont;
             options.Items.AddRange(inputDef.Options);
+            options.Text = inputDef.Value;
             options.TextUpdate += new EventHandler(options_TextUpdate);
             options.Click += Options_Click;
             options.KeyDown += Options_KeyDown;
@@ -208,12 +240,14 @@ namespace DynamicCommandForm
                 if (options.Items.Count > 0)
                 {
                     if(options.SelectedItem != null)
-                        options.Text = options.SelectedItem.ToString();
+                        options.NextText = options.SelectedItem.ToString();
                     else
-                        options.Text = options.Items[0].ToString();
+                        options.NextText = options.Items[0].ToString();
                 }
                 else
-                    options.Text = string.Empty;
+                    options.NextText = string.Empty;
+                options.Text = options.NextText;
+                options.ChangeItemAction?.Invoke(options.Text);
                 e.Handled = true;
             }
         }
@@ -242,8 +276,17 @@ namespace DynamicCommandForm
             }
             if (options.Items.Count == 0)
             {
-                options.Items.Add(item);
+                if (options.AllowNewValues)
+                    options.Items.Add(item);
+                else
+                    options.DroppedDown = false;
             }
+        }
+
+        private static void CommandsComboBox_SelectionChangeValue(object sender, EventArgs e)
+        {
+            AutoCompletedComBobox options = (AutoCompletedComBobox)sender;
+            options.ChangeItemAction((options.SelectedItem?.ToString()));
         }
 
         class GuidDefinition
@@ -252,6 +295,8 @@ namespace DynamicCommandForm
             public string ButtonText { get; set; } = "Ok";
             public int InputsWidth { get; set; } = 200;
             public Input[] Inputs { get; set; }
+            public string CommandValue { get; set; }
+            public Dictionary<string,Input[]> Commands { get; set; }
         }
 
         class Input
@@ -263,6 +308,8 @@ namespace DynamicCommandForm
 
         class AutoCompletedComBobox : ComboBox
         {
+            public Action<string> ChangeItemAction { get; set; }
+            public bool AllowNewValues { get; set; } = true;
             public string LastText { get; set; }
             private string[] _toLowerOptions;
             private string[] _options;
@@ -273,6 +320,8 @@ namespace DynamicCommandForm
                     for (int i = 0; i < _options.Length; i++)
                         _toLowerOptions[i] = _options[i]?.ToLowerInvariant();                    
                 } }
+
+            public string NextText { get; internal set; }
 
             public string[] CalculateFilteredOptions(string text)
             {

@@ -63,6 +63,9 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
+    <None Include="DynamicFormMultiCommand.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="DynamicForm.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
