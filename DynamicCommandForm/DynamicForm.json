@@ -9,8 +9,9 @@
       "name": "server"
     },
     {
-      "options": [ "ToR", "dbio", "db468", "empty", "z" ],
-      "name": "db"
+      "options": [ "ToR", "dbio", "db468", "empty", "z", "db467", "db469" ],
+      "name": "db",
+      "value":  "dbio"
     },
     {
       "name": "uid",

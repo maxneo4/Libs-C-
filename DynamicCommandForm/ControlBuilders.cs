@@ -91,11 +91,13 @@ namespace DynamicCommandForm
         {
             Control input;
             if (inputDef.Options == null)
+            {
                 input = BuildTextBox();
-            else
+                input.Text = inputDef.Value;
+            }
+            else            
                 input = BuildComboBox(inputDef);
-
-            input.Text = inputDef.Value;
+            
             input.Width = guiDef.InputsWidth;
             controlsByName[inputDef.Name] = input;
             return input;
@@ -138,12 +140,18 @@ namespace DynamicCommandForm
             };
             options.Font = controlFont;
             options.Items.AddRange(inputDef.Options);
-            options.Text = inputDef.Value;
+            options.SelectedItem = inputDef.Value;
             options.TextUpdate += new EventHandler(options_TextUpdate);
             options.Click += Options_Click;
             options.KeyDown += Options_KeyDown;
+            options.VisibleChanged += Options_VisibleChanged;
 
             return options;
+        }
+
+        private static void Options_VisibleChanged(object sender, EventArgs e)
+        {
+            ((ComboBox)sender).SelectionStart = ((ComboBox)sender).Text.Length;
         }
 
         private static void Options_KeyDown(object sender, KeyEventArgs e)
