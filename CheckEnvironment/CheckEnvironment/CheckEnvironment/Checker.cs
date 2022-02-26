@@ -4,11 +4,21 @@ using System.Collections.Generic;
 using System.Data.SQLite;
 
 namespace CheckEnvironment
-{
-    //@TODO revisar control de errores, incluyendo la razon que falle traer valores
+{   
+    //@TODO
+    //Desactivar / activarlo [OK]
+    //no repetir valores (tabla valor, tabla instancia de valor...)
+    //Metodo para recibir consultas
+    //Formatear/formalizar mejor valores de fecha al ser visibles para analisis
+    //Conocer cuantos bytes se han guardado y poder controlar el limite maximo de bytes en memoria cuando se prende la feature
+    //Poder poner en modo persistencia (validar si en webapp funciona por defecto) Util para onpremise...
+    //Proteger contra hilos algunas propiedades sensibles
     public class Checker
     {
         private static SQLiteConnection _connection;
+        private static bool _enabled = false;
+
+        public static bool Enabled { get { return _enabled; } set { _enabled = value; } }
 
         public static SQLiteConnection GetConnection()
         {
@@ -25,18 +35,25 @@ namespace CheckEnvironment
             var cmd = new SQLiteCommand("create table event(created datetime, category text, value text)", _connection);
             cmd.ExecuteNonQuery();
         }
+               
 
         public static void RegisterEvent(string category, object value, string source = null)
         {
-            if (value == null)
-                value = "value was null";
-            else if (!(value is string))
-                value = JsonConvert.SerializeObject(value);
-            var cmd = new SQLiteCommand("insert into event values(CURRENT_TIMESTAMP, $category, $value)", GetConnection());
-            cmd.Parameters.AddWithValue("category", category);
-            cmd.Parameters.AddWithValue("value", value); 
-            cmd.Prepare();
-            cmd.ExecuteNonQuery();
+            if (!Enabled)
+                return;
+            try
+            {
+                if (value == null)
+                    value = "value was null";
+                else if (!(value is string))
+                    value = JsonConvert.SerializeObject(value);
+                var cmd = new SQLiteCommand("insert into event values(CURRENT_TIMESTAMP, $category, $value)", GetConnection());
+                cmd.Parameters.AddWithValue("category", category);
+                cmd.Parameters.AddWithValue("value", value);
+                cmd.Prepare();
+                cmd.ExecuteNonQuery();
+            }
+            catch { }
         }
 
         public static List<Event> GetEventsByCategory(string category)
