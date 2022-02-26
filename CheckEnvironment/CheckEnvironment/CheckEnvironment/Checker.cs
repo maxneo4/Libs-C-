@@ -1,16 +1,16 @@
-﻿using Microsoft.Data.Sqlite;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Data.SQLite;
 
 namespace CheckEnvironment
 {
     //@TODO revisar control de errores, incluyendo la razon que falle traer valores
     public class Checker
     {
-        private static SqliteConnection _connection;
+        private static SQLiteConnection _connection;
 
-        public static SqliteConnection GetConnection()
+        public static SQLiteConnection GetConnection()
         {
             if (_connection == null)
                 StartConnection();
@@ -19,10 +19,10 @@ namespace CheckEnvironment
 
         private static void StartConnection()
         {
-            _connection = new SqliteConnection("Data Source=:memory:");
+            _connection = new SQLiteConnection("Data Source=:memory:");
             //_connection = new SqliteConnection("Data Source=InMemorySample;Mode=Memory;Cache=Shared");
             _connection.Open();
-            var cmd = new SqliteCommand("create table event(created datetime, category text, value text)", _connection);
+            var cmd = new SQLiteCommand("create table event(created datetime, category text, value text)", _connection);
             cmd.ExecuteNonQuery();
         }
 
@@ -32,7 +32,7 @@ namespace CheckEnvironment
                 value = "value was null";
             else if (!(value is string))
                 value = JsonConvert.SerializeObject(value);
-            using var cmd = new SqliteCommand("insert into event values(CURRENT_TIMESTAMP, $category, $value)", GetConnection());
+            var cmd = new SQLiteCommand("insert into event values(CURRENT_TIMESTAMP, $category, $value)", GetConnection());
             cmd.Parameters.AddWithValue("category", category);
             cmd.Parameters.AddWithValue("value", value); 
             cmd.Prepare();
@@ -44,10 +44,10 @@ namespace CheckEnvironment
             string stm = "SELECT created, value from event where category = $category";
             try
             {
-                using var cmd = new SqliteCommand(stm, GetConnection());
+                var cmd = new SQLiteCommand(stm, GetConnection());
                 cmd.Parameters.AddWithValue("category", category);
                 cmd.Prepare();
-                SqliteDataReader reader = cmd.ExecuteReader();
+                SQLiteDataReader reader = cmd.ExecuteReader();
                 List<Event> events = new List<Event>();
                 while (reader.Read())
                 {
@@ -60,7 +60,7 @@ namespace CheckEnvironment
                 return events;
             }catch (Exception ex)
             {
-                return new List<Event>() { new Event() { Category= "error GetEventsByCategory", Value = ex.Message, Created = DateTime.UtcNow } };
+                return new List<Event>() { new Event() { Category= "error GetEventsByCategory", Value = JsonConvert.SerializeObject(ex), Created = DateTime.UtcNow } };
             }
         }
     }
