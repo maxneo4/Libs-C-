@@ -2,16 +2,18 @@
 using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
+using System.Text.RegularExpressions;
 
 namespace CheckEnvironment
-{   
+{
     //@TODO
     //Desactivar / activarlo [OK]
     //Agreagar metodo de limpieza de valores [OK]
     //Verificar cuantos megas ocupa en memoria la tabla de eventos [OK]
     //Agregar source como dato opcional [OK]
-    //no repetir valores (tabla valor, tabla instancia de valor...)
-    //Metodo para recibir consultas
+    //Metodo para recibir condiciones de consulta [OK]
+    //Transformacion de condicion para rango de fechas simple [OK] created[DATE('now','-1 hour') | CURRENT_TIMESTAMP]
+    //no repetir valores (tabla valor, tabla instancia de valor...)    
     //Formatear/formalizar mejor valores de fecha al ser visibles para analisis
     //Conocer cuantos bytes se han guardado y poder controlar el limite maximo de bytes en memoria cuando se prende la feature
     //Poder poner en modo persistencia (validar si en webapp funciona por defecto) Util para onpremise...
@@ -96,7 +98,12 @@ namespace CheckEnvironment
                 return events;
             }catch (Exception ex)
             {
-                return new List<Event>() { new Event() { Category= "error GetEventsByCategory", Value = GetTextValue(ex), Created = DateTime.UtcNow } };
+                return new List<Event>() { new Event() { 
+                    Category= "error GetEventsByCategory", 
+                    Value = GetTextValue(ex), 
+                    Created = DateTime.UtcNow,
+                    Source = "Checker"}
+                };
             }
         }
 
@@ -107,6 +114,14 @@ namespace CheckEnvironment
 
         public static List<Event> GetEventsByQueryCondition(string condition)
         {
+            if(condition != null)
+            {
+                Match match = Regex.Match(condition, "created\\[(.+)]");
+                if (match.Success)
+                {
+                    condition = ProcessSimpleDateRange(condition, match);
+                }
+            }           
             string stm = $"SELECT created, category, value, source from event where {condition}";
             try
             {
@@ -133,6 +148,17 @@ namespace CheckEnvironment
                     Source = "Checker"
                 } };
             }
+        }
+
+        private static string ProcessSimpleDateRange(string condition, Match match)
+        {
+            string dates = match.Groups[1].Value;
+            string[] adates = dates.Split('|');
+            string beginDate = adates[0];
+            string endDate = adates[1];
+            string formattedRangeDate = $"strftime('%s', created) BETWEEN strftime('%s', {beginDate}) AND strftime('%s', {endDate})";
+            condition = condition.Replace(match.Value, formattedRangeDate);
+            return condition;
         }
 
         public static double GetMBSizeInMemory()
