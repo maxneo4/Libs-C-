@@ -7,6 +7,9 @@ namespace CheckEnvironment
 {   
     //@TODO
     //Desactivar / activarlo [OK]
+    //Agreagar metodo de limpieza de valores [OK]
+    //Verificar cuantos megas ocupa en memoria la tabla de eventos...
+    //Agregar source como dato opcional
     //no repetir valores (tabla valor, tabla instancia de valor...)
     //Metodo para recibir consultas
     //Formatear/formalizar mejor valores de fecha al ser visibles para analisis
@@ -19,7 +22,13 @@ namespace CheckEnvironment
         private static bool _enabled = false;
 
         public static bool Enabled { get { return _enabled; } set { _enabled = value; } }
-
+        public static EnabledState UpdateEnabled(bool newValue)
+        {
+            EnabledState result = new EnabledState() { OldState = Enabled };
+            Enabled = newValue;
+            result.NewState = newValue;
+            return result;
+        }
         public static SQLiteConnection GetConnection()
         {
             if (_connection == null)
@@ -56,6 +65,17 @@ namespace CheckEnvironment
             catch { }
         }
 
+        public static int CleanAllEvents()
+        {            
+            try
+            {               
+                var cmd = new SQLiteCommand("delete from event", GetConnection());               
+                return cmd.ExecuteNonQuery();
+            }
+            catch { return -1; }
+        }
+
+
         public static List<Event> GetEventsByCategory(string category)
         {            
             string stm = "SELECT created, value from event where category = $category";
@@ -87,5 +107,11 @@ namespace CheckEnvironment
         public string Category { get; set; }
         public string Value { get; set; }
         public DateTime Created { get; set; }
+    }
+
+    public class EnabledState
+    {
+        public bool OldState { get; set; }
+        public bool NewState { get; set; }
     }
 }
