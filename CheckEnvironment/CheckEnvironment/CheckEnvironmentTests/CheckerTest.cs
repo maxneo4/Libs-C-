@@ -103,6 +103,34 @@ namespace CheckEnvironmentTests
         }
 
         [Test]
+        public void TestStoreOneEventAndGetAll()
+        {
+            //When
+            Checker.Enabled = true;
+            Checker.RegisterEvent("default", "llego aqui", "CheckerTest.TestStoreEvent");
+            //Then
+            var result = Checker.GetAllEvents();
+            Assert.IsTrue(result.Count == 1);
+            var ev = result[0];
+            Assert.AreEqual("llego aqui", ev.Value);
+            Assert.AreEqual("CheckerTest.TestStoreEvent", ev.Source);
+        }
+
+        [Test]
+        public void TestStoreOneEventWithNullSourceAndQueryBySimpleTimeCondition()
+        {
+            //When
+            Checker.Enabled = true;
+            Checker.RegisterEvent("default", "llego aqui", null);
+            //Then
+            var result = Checker.GetEventsByQueryCondition("created[DATE('now','-1 hour') | CURRENT_TIMESTAMP]");
+            Assert.IsTrue(result.Count == 1);
+            var ev = result[0];
+            Assert.AreEqual("llego aqui", ev.Value);
+            Assert.IsNull(ev.Source);
+        }
+
+        [Test]
         public void TestDisabledStoreOneEvent()
         {
             //When

@@ -75,7 +75,6 @@ namespace CheckEnvironment
             catch { return -1; }
         }
 
-
         public static List<Event> GetEventsByCategory(string category)
         {            
             string stm = "SELECT created, category, value, source from event where category = $category";
@@ -88,29 +87,38 @@ namespace CheckEnvironment
                 List<Event> events = new List<Event>();
                 while (reader.Read())
                 {
-                    Event @event = new Event();
-                    @event.Created = IsDbNull(reader, 0)? DateTime.MinValue : reader.GetDateTime(0);
-                    @event.Category = IsDbNull(reader, 1)? null: reader.GetString(1);
-                    @event.Value = IsDbNull(reader, 2) ? null : reader.GetString(2);
-                    @event.Source = IsDbNull(reader, 3) ? null : reader.GetString(3);
+                    Event @event = MapEventFromReader(reader);
                     events.Add(@event);
                 }
                 return events;
             }catch (Exception ex)
             {
-                return new List<Event>() { new Event() { 
-                    Category= "error GetEventsByCategory", 
-                    Value = GetTextValue(ex), 
-                    Created = DateTime.UtcNow,
-                    Source = "Checker"}
-                };
+                return ErrorAsEventList(ex, "error GetEventsByCategory");
             }
         }
 
-        private static bool IsDbNull(SQLiteDataReader reader, int ordinal)
+        public static List<Event> GetAllEvents()
         {
-            return reader[ordinal] == DBNull.Value;
+            string stm = "SELECT created, category, value, source from event";
+            try
+            {
+                List<Event> events = new List<Event>();
+                var cmd = new SQLiteCommand(stm, GetConnection());
+                SQLiteDataReader reader = cmd.ExecuteReader();
+                while (reader.Read())
+                {
+                    Event @event = MapEventFromReader(reader);
+                    events.Add(@event);
+                }
+                return events;
+            }
+            catch (Exception ex)
+            {
+                return ErrorAsEventList(ex, "error GetAllEvents");
+            }
         }
+
+        
 
         public static List<Event> GetEventsByQueryCondition(string condition)
         {
@@ -125,42 +133,22 @@ namespace CheckEnvironment
             string stm = $"SELECT created, category, value, source from event where {condition}";
             try
             {
-                var cmd = new SQLiteCommand(stm, GetConnection());                
-                SQLiteDataReader reader = cmd.ExecuteReader();
                 List<Event> events = new List<Event>();
+                var cmd = new SQLiteCommand(stm, GetConnection());                
+                SQLiteDataReader reader = cmd.ExecuteReader();                
                 while (reader.Read())
                 {
-                    Event @event = new Event();
-                    @event.Created = reader.GetDateTime(0);
-                    @event.Category = reader.GetString(1);
-                    @event.Value = reader.GetString(2);
-                    @event.Source = reader.GetString(3);
+                    Event @event = MapEventFromReader(reader);
                     events.Add(@event);
                 }
                 return events;
             }
             catch (Exception ex)
             {
-                return new List<Event>() { new Event() {
-                    Category = "error GetEventsByQueryCondition",
-                    Value = GetTextValue(ex),
-                    Created = DateTime.UtcNow,
-                    Source = "Checker"
-                } };
+                return ErrorAsEventList(ex, "error GetEventsByQueryCondition");
             }
         }
-
-        private static string ProcessSimpleDateRange(string condition, Match match)
-        {
-            string dates = match.Groups[1].Value;
-            string[] adates = dates.Split('|');
-            string beginDate = adates[0];
-            string endDate = adates[1];
-            string formattedRangeDate = $"strftime('%s', created) BETWEEN strftime('%s', {beginDate}) AND strftime('%s', {endDate})";
-            condition = condition.Replace(match.Value, formattedRangeDate);
-            return condition;
-        }
-
+               
         public static double GetMBSizeInMemory()
         {            
             string stm = "SELECT SUM(\"pgsize\") FROM \"dbstat\" WHERE name='event'";
@@ -179,7 +167,15 @@ namespace CheckEnvironment
                 return -1;
             }
         }
-
+        private static Event MapEventFromReader(SQLiteDataReader reader)
+        {
+            Event @event = new Event();
+            @event.Created = IsDbNull(reader, 0) ? DateTime.MinValue : reader.GetDateTime(0);
+            @event.Category = IsDbNull(reader, 1) ? null : reader.GetString(1);
+            @event.Value = IsDbNull(reader, 2) ? null : reader.GetString(2);
+            @event.Source = IsDbNull(reader, 3) ? null : reader.GetString(3);
+            return @event;
+        }
         private static string GetTextValue(object obj)
         {
             if (obj == null)
@@ -198,6 +194,30 @@ namespace CheckEnvironment
             {
                 ContractResolver = new JsonIgnoreResolver("TargetSite")//because sqliteException has big and cycle information with this property...
             });
+        }
+        private static string ProcessSimpleDateRange(string condition, Match match)
+        {
+            string dates = match.Groups[1].Value;
+            string[] adates = dates.Split('|');
+            string beginDate = adates[0];
+            string endDate = adates[1];
+            string formattedRangeDate = $"strftime('%s', created) BETWEEN strftime('%s', {beginDate}) AND strftime('%s', {endDate})";
+            condition = condition.Replace(match.Value, formattedRangeDate);
+            return condition;
+        }
+        private static bool IsDbNull(SQLiteDataReader reader, int ordinal)
+        {
+            return reader[ordinal] == DBNull.Value;
+        }
+
+        private static List<Event> ErrorAsEventList(Exception ex, string category)
+        {
+            return new List<Event>() { new Event() {
+                    Category = category,
+                    Value = GetTextValue(ex),
+                    Created = DateTime.UtcNow,
+                    Source = "Checker"
+                } };
         }
     }
 
