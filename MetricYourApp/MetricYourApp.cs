@@ -1,8 +1,8 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
-using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -27,16 +27,26 @@ namespace Deployment.API.Services //change namespace when is included as code
         }
 
         public async void AppendAllTextToCloudLog(string logPath, string text)
+        {            
+            //using (HttpClient client = new HttpClient())
+            //{
+            //    try
+            //    {
+            //        var r = await client.PostAsync($"{_baseUrl}/addtolog?logpath={logPath}",
+            //            new StringContent(text, Encoding.UTF8, "text/plain"));
+            //    }
+            //    catch { }
+            //}
+        }
+
+        private string FormatObject(object input)
         {
-            using (HttpClient client = new HttpClient())
-            {
-                try
-                {
-                    var r = await client.PostAsync($"{_baseUrl}/addtolog?logpath={logPath}",
-                        new StringContent(text, Encoding.UTF8, "text/plain"));
-                }
-                catch { }
-            }
+            if(input == null)
+                return "[message is null]";
+            if (input is string)
+                return input.ToString();
+            else
+                return JsonConvert.SerializeObject(input);
         }
 
         private string GetLogPath(string prefix)
@@ -51,7 +61,7 @@ namespace Deployment.API.Services //change namespace when is included as code
 
         public void LogUse(object messageObj, string prefix = "", int limitFrameIndex = 8, string detail1 = "", string detail2 = "")
         {
-            string message = messageObj != null ? messageObj.ToString() : "message is null";
+            string message = FormatObject(messageObj);
             StringBuilder stackTrace = new StringBuilder();
             StackTrace t = new StackTrace();
 
