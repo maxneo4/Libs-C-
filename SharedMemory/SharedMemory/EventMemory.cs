@@ -5,7 +5,7 @@ using System.Text;
 
 namespace SharedMemory
 {
-    class EventMemory
+    public class EventMemory
     {
         private const string EVENT_MAP_MEMORY = "EVENT_MAP_MEMORY";
         private const string EVENT_HEADER_MEMORY = "EVENT_HEADER_MEMORY";
