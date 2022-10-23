@@ -9,6 +9,7 @@ namespace SharedMemoryConsole
         static void Main(string[] args)
         {
             EventMemory eventMemory = new EventMemory(1);
+            //EventMemory eventMemory1 = EventMemory.GetSingletonInstace(1);
 
             eventMemory.WriteEvent("hola mundo\r\n");
             eventMemory.WriteEvent("otro evento\r\n");
