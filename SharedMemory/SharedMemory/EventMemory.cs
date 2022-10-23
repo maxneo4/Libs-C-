@@ -11,6 +11,7 @@ namespace SharedMemory
         private const string EVENT_HEADER_MEMORY = "EVENT_HEADER_MEMORY";
         private MemoryMappedViewAccessor _memoryMappedViewAccessor;
         private MemoryMappedViewAccessor _memoryHeaderViewAccessor;
+        private static EventMemory _singleton;
                    
         //***
         //Validate hash of event, if exists increment count.. only
@@ -21,8 +22,8 @@ namespace SharedMemory
         private HeaderMemory _headerMemory;
         public EventMemory(int maximiumMb)
         {
-            //_memoryMappedViewAccessor = SharedMemory.CreateMapFileAndAccesor(EVENT_MAP_MEMORY, maximiumMb);
-            _memoryMappedViewAccessor = SharedMemory.CreateMapFileAndAccesor(EVENT_MAP_MEMORY, 100L);
+            _memoryMappedViewAccessor = SharedMemory.CreateMapFileAndAccesor(EVENT_MAP_MEMORY, maximiumMb);
+            //_memoryMappedViewAccessor = SharedMemory.CreateMapFileAndAccesor(EVENT_MAP_MEMORY, 100L);
 
             _memoryHeaderViewAccessor = SharedMemory.CreateMapFileAndAccesor(EVENT_HEADER_MEMORY, 1L);//1kb size
             _headerMemory = new HeaderMemory();
@@ -39,7 +40,14 @@ namespace SharedMemory
             _headerMemory.Behaviour.WorkingSince = DateTime.UtcNow;
         }
 
-        public void WriteString(string input)
+        public static EventMemory GetSingletonInstace(int maximiumMb)
+        {
+            if (_singleton == null)
+                _singleton = new EventMemory(maximiumMb);
+            return _singleton;
+        }
+
+        private void WriteString(string input)
         {
             byte[] data = Encoding.UTF8.GetBytes(input);
             long dataLenght = data.Length;
@@ -97,7 +105,7 @@ namespace SharedMemory
             }            
         }
 
-        public void WriteEvent(string category, string source, string value)
+        public void WriteEvent(string category, string source, object value)
         {
             DateTime created = DateTime.UtcNow;
 
@@ -110,14 +118,14 @@ namespace SharedMemory
             WriteHeader();
         }
 
-        public void WriteEvent(string category, string value)
+        public void WriteEvent(string category, object value)
         {
             WriteEvent(category, "defaultSource", value);
         }
 
-        public void WriteEvent(string value)
+        public void WriteEvent(object value)
         {
-            WriteEvent("defaultCategory", value);
+            WriteEvent("defaultCategory", value?.ToString());
         }
     }
 }
