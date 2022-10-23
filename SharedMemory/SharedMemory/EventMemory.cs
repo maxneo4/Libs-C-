@@ -110,12 +110,26 @@ namespace SharedMemory
             DateTime created = DateTime.UtcNow;
 
             string dateTimeUniversalUC = created.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss'.'fff'Z'");
-            string input = $"{category}:/:{source}:/:{dateTimeUniversalUC}:/:{value}:/:";
+            string input = $"{category}:/:{source}:/:{dateTimeUniversalUC}:/:{Solve(value)}:/:";
             WriteString(input);
             //category::bizagi:/:2022-04-14T01:56:32.044Z:/:Un valor pequeñop:\:
             //@TODO poner campo para veces que se repite... 0001, soportando 10 mil repeticiones...
             _headerMemory.Behaviour.CountRegisteredEvents++;
             WriteHeader();
+        }
+
+        private object Solve(object value)
+        {
+            Type type = value?.GetType();
+            if (type != null)
+            {
+                /*if (type.IsPrimitive)
+                    return value;*/
+               // else
+                    return JsonConvert.SerializeObject(value);
+            }
+            else
+                return value;
         }
 
         public void WriteEvent(string category, object value)
@@ -125,7 +139,7 @@ namespace SharedMemory
 
         public void WriteEvent(object value)
         {
-            WriteEvent("defaultCategory", value?.ToString());
+            WriteEvent("defaultCategory", value);
         }
     }
 }
