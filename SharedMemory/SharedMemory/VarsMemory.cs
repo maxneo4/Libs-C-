@@ -32,13 +32,14 @@ namespace SharedMemory
         public object GetVar(string varName)
         {
             Vars = GetVars();
-            object result = Vars.TryGetValue(varName, out result);
+            object result;
+            Vars.TryGetValue(varName, out result);
             return result;
         }
 
         public Dictionary<string, object> GetVars()
         {
-            int bytesSize = (int)(_kbSize * 1024);
+            int bytesSize = _kbSize * 1024;
             byte[] buffer = new byte[bytesSize];
             _memoryVarsViewAccesor.ReadArray(0, buffer, 0, bytesSize);
             string json = Encoding.UTF8.GetString(buffer);
@@ -48,7 +49,7 @@ namespace SharedMemory
 
         private void WriteVars()
         {
-            int bytesSize = (int)(_kbSize * 1024);
+            int bytesSize = _kbSize * 1024;
             string input = JsonConvert.SerializeObject(Vars);
             byte[] data = Encoding.UTF8.GetBytes(input);            
             _memoryVarsViewAccesor.WriteArray(0, new byte[bytesSize], 0, bytesSize);//clear data
