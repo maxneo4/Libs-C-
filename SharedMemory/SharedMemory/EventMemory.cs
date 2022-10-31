@@ -22,10 +22,8 @@ namespace SharedMemory
         private HeaderMemory _headerMemory;
         public EventMemory(int maximiumMb)
         {
-            _memoryMappedViewAccessor = SharedMemory.CreateMapFileAndAccesor(EVENT_MAP_MEMORY, maximiumMb);
-            //_memoryMappedViewAccessor = SharedMemory.CreateMapFileAndAccesor(EVENT_MAP_MEMORY, 100L);
-
-            _memoryHeaderViewAccessor = SharedMemory.CreateMapFileAndAccesor(EVENT_HEADER_MEMORY, 1L);//1kb size
+            _memoryMappedViewAccessor = SharedMemory.CreateMapFileAndAccesorByMB(EVENT_MAP_MEMORY, maximiumMb);
+            _memoryHeaderViewAccessor = SharedMemory.CreateMapFileAndAccesorByKb(EVENT_HEADER_MEMORY, 1);//1kb size
             _headerMemory = new HeaderMemory();
             _headerMemory.FirstPage = 1;
             _headerMemory.Page1.StartIndex = 0;
@@ -45,6 +43,11 @@ namespace SharedMemory
             if (_singleton == null)
                 _singleton = new EventMemory(maximiumMb);
             return _singleton;
+        }
+
+        public static void ClearSharedData()
+        {
+            _singleton = null;
         }
 
         private void WriteString(string input)
@@ -109,8 +112,8 @@ namespace SharedMemory
         {
             DateTime created = DateTime.UtcNow;
 
-            string dateTimeUniversalUC = created.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss'.'fff'Z'");
-            string input = $"{category}:/:{source}:/:{dateTimeUniversalUC}:/:{Solve(value)}:/:";
+            string dateTimeUniversalUTC = created.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss'.'fff'Z'");
+            string input = $"{category}:/:{source}:/:{dateTimeUniversalUTC}:/:{Solve(value)}:/:";
             WriteString(input);
             //category::bizagi:/:2022-04-14T01:56:32.044Z:/:Un valor pequeñop:\:
             //@TODO poner campo para veces que se repite... 0001, soportando 10 mil repeticiones...
@@ -134,12 +137,12 @@ namespace SharedMemory
 
         public void WriteEvent(string category, object value)
         {
-            WriteEvent(category, "defaultSource", value);
+            WriteEvent(category, null, value);
         }
 
         public void WriteEvent(object value)
         {
-            WriteEvent("defaultCategory", value);
+            WriteEvent(null, value);
         }
     }
 }

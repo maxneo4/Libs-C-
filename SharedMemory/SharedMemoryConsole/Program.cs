@@ -14,6 +14,7 @@ namespace SharedMemoryConsole
             eventMemory.WriteEvent("hola mundo\r\n");
             eventMemory.WriteEvent("otro evento\r\n");
             eventMemory.WriteEvent("evento final\r\n");
+            eventMemory.WriteEvent("cat", 56);
             eventMemory.WriteEvent("CAtalog", "Bizagi", "Un valor pequeñop");
 
             for (int i = 0; i < 100; i++)
@@ -26,6 +27,10 @@ namespace SharedMemoryConsole
 2022-04-08 08:54:24 BIZAGI UPGRADER LOG ----- INFORMATION -- UpgradeAttribBooleanDefaultValue
 2022-04-08 08:54:24 BIZAGI UPGRADER LOG ----- INFORMATION -- End: Upgrading database FlujoPAMDesa on server MAXPC\SQL2019DEV...");
             }
+            
+            VarsMemory varsMemory = new VarsMemory();
+            varsMemory.SetVar("sl", 445);
+            eventMemory.WriteEvent("newF", "vars", varsMemory.GetVars());
 
             Console.ReadLine();
         }

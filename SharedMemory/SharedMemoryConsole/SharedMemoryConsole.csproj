@@ -71,7 +71,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\SharedMemory\SharedMemory.csproj">
-      <Project>{1DD083BE-4AD0-497D-A30A-133D8917808A}</Project>
+      <Project>{1dd083be-4ad0-497d-a30a-133d8917808a}</Project>
       <Name>SharedMemory</Name>
     </ProjectReference>
   </ItemGroup>
