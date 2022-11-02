@@ -5,7 +5,10 @@ namespace SharedMemoryConsole
 {
     class Program
     {
-
+        /*
+         * Si se quiere compartir entre varias aplicaciones, se debe dejar de hacer el Clear en el constructor, manejar el esado en el mapfile para el header
+         * Para que funcione adecuadamente el webapp de go debe crear los espacios de memoria primero, o volver a ejecutar luego que arranque la webapp de go las pruebas
+         */
         static void Main(string[] args)
         {
             EventMemory eventMemory = new EventMemory(1);
@@ -19,6 +22,10 @@ namespace SharedMemoryConsole
 
             for (int i = 0; i < 100; i++)
             {
+                if (i % 25 == 0)
+                {                    
+                    eventMemory = new EventMemory(1);
+                }
                 eventMemory.WriteEvent("Other", "Custom" + i, @"2022-04-08 08:54:23 BIZAGI UPGRADER LOG ----- INFORMATION -- UpdateAsyncTaskTime
 2022-04-08 08:54:24 BIZAGI UPGRADER LOG ----- INFORMATION -- In process Generar Comprobante Recepción, version 1.3, in activity Generar Documento the timeout was modified from 0 to 30 seconds.
 2022-04-08 08:54:24 BIZAGI UPGRADER LOG ----- INFORMATION -- In process Generar Comprobante Recepción, version 1.4, in activity Generar Documento the timeout was modified from 0 to 30 seconds.
@@ -27,11 +34,15 @@ namespace SharedMemoryConsole
 2022-04-08 08:54:24 BIZAGI UPGRADER LOG ----- INFORMATION -- UpgradeAttribBooleanDefaultValue
 2022-04-08 08:54:24 BIZAGI UPGRADER LOG ----- INFORMATION -- End: Upgrading database FlujoPAMDesa on server MAXPC\SQL2019DEV...");
             }
-            
-            VarsMemory varsMemory = new VarsMemory();
+
+            VarsMemory varsMemory = VarsMemory.GetSingletonInstance();
             varsMemory.SetVar("sl", 445);
             eventMemory.WriteEvent("newF", "vars", varsMemory.GetVars());
 
+            //varsMemory.ClearVars();           
+            varsMemory.SetVar("new", 4545);
+
+            
             Console.ReadLine();
         }
 

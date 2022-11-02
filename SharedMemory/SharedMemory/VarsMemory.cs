@@ -10,13 +10,37 @@ namespace SharedMemory
         private const string VARS_MAP_MEMORY = "VARS_MAP_MEMORY";
         private const string VARS_LENGTH = "VarsLength";
         private MemoryMappedViewAccessor _memoryVarsViewAccesor;
-        private int _kbSize=1;
+        private static VarsMemory _singleton;
+        private int _kbSize=10;
 
         private Dictionary<string, object> Vars { get; set; }
 
+        public static VarsMemory GetSingletonInstance()
+        {
+            if (_singleton == null)
+                _singleton = new VarsMemory();
+            return _singleton;
+        }
+
+        public static void ClearSingletonInstance()
+        {
+            _singleton?.Dispose();
+            _singleton = null;
+        }
+
+        public void Dispose()
+        {
+            _memoryVarsViewAccesor.Dispose();
+        }
+
         public VarsMemory()
         {
-            _memoryVarsViewAccesor = SharedMemory.CreateMapFileAndAccesorByKb(VARS_MAP_MEMORY, _kbSize);
+            _memoryVarsViewAccesor = SharedMemory.CreateOrOpenMapFileAndAccesorByKb(VARS_MAP_MEMORY, _kbSize);
+            ClearVars();
+        }
+
+        public void ClearVars()
+        {
             Vars = new Dictionary<string, object>() { { VARS_LENGTH, 0 } };
             WriteVars();
         }

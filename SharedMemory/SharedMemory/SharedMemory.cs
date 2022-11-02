@@ -6,16 +6,23 @@ namespace SharedMemory
     {
         const int KBS_BY_MB = 1024;
         const int BYTES_BY_KB = 1024;
-        internal static MemoryMappedViewAccessor CreateMapFileAndAccesorByMB(string identifier, int MbCount)
+        internal static MemoryMappedViewAccessor CreateOrOpenMapFileAndAccesorByMB(string identifier, int MbCount)
         {
             int kbsCount = GetKbFromMB(MbCount);
-            return CreateMapFileAndAccesorByKb(identifier, kbsCount);
+            return CreateOrOpenMapFileAndAccesorByKb(identifier, kbsCount);
         }
 
-        internal static MemoryMappedViewAccessor CreateMapFileAndAccesorByKb(string identifier, int KBCount)
+        internal static MemoryMappedViewAccessor CreateOrOpenMapFileAndAccesorByKb(string identifier, int KBCount)
         {
             long BytesCount = GetBytesFromKB(KBCount);
             MemoryMappedFile mmf = MemoryMappedFile.CreateOrOpen(identifier, BytesCount);
+            MemoryMappedViewAccessor accessor = mmf.CreateViewAccessor();
+            return accessor;
+        }
+
+        internal static MemoryMappedViewAccessor OpenMapFileAndAccesor(string identifier)
+        {            
+            MemoryMappedFile mmf = MemoryMappedFile.OpenExisting(identifier);
             MemoryMappedViewAccessor accessor = mmf.CreateViewAccessor();
             return accessor;
         }

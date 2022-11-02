@@ -22,8 +22,13 @@ namespace SharedMemory
         private HeaderMemory _headerMemory;
         public EventMemory(int maximiumMb)
         {
-            _memoryMappedViewAccessor = SharedMemory.CreateMapFileAndAccesorByMB(EVENT_MAP_MEMORY, maximiumMb);
-            _memoryHeaderViewAccessor = SharedMemory.CreateMapFileAndAccesorByKb(EVENT_HEADER_MEMORY, 1);//1kb size
+            _memoryMappedViewAccessor = SharedMemory.CreateOrOpenMapFileAndAccesorByMB(EVENT_MAP_MEMORY, maximiumMb);
+            _memoryHeaderViewAccessor = SharedMemory.CreateOrOpenMapFileAndAccesorByKb(EVENT_HEADER_MEMORY, 1);//1kb size
+            ClearEvents();
+        }
+
+        public void ClearEvents()
+        {
             _headerMemory = new HeaderMemory();
             _headerMemory.FirstPage = 1;
             _headerMemory.Page1.StartIndex = 0;
@@ -36,18 +41,26 @@ namespace SharedMemory
             _headerMemory.Page2.MaxPosition = _memoryMappedViewAccessor.Capacity - 1;
             _currentPage = 1;
             _headerMemory.Behaviour.WorkingSince = DateTime.UtcNow;
+            WriteHeader();
         }
 
-        public static EventMemory GetSingletonInstace(int maximiumMb)
+        public static EventMemory GetSingletonInstance(int maximiumMb)
         {
             if (_singleton == null)
                 _singleton = new EventMemory(maximiumMb);
             return _singleton;
         }
 
-        public static void ClearSharedData()
+        public static void ClearSingletonInstance()
         {
+            _singleton?.Dispose();
             _singleton = null;
+        }
+
+        public void Dispose()
+        {
+            _memoryMappedViewAccessor.Dispose();
+            _memoryHeaderViewAccessor.Dispose();
         }
 
         private void WriteString(string input)
@@ -69,7 +82,7 @@ namespace SharedMemory
         {
             string input = JsonConvert.SerializeObject(_headerMemory) + ":/:";
             byte[] data = Encoding.UTF8.GetBytes(input);
-            _memoryHeaderViewAccessor.WriteArray(0, new byte[1024], 0, 1024);//clear data
+            //_memoryHeaderViewAccessor.WriteArray(0, new byte[1024], 0, 1024);//clear data
             _memoryHeaderViewAccessor.WriteArray(0, data, 0, data.Length);
         }
 
