@@ -1,5 +1,6 @@
 ﻿using SharedMemory;
 using System;
+using System.Threading;
 
 namespace SharedMemoryConsole
 {
@@ -10,6 +11,24 @@ namespace SharedMemoryConsole
          * Para que funcione adecuadamente el webapp de go debe crear los espacios de memoria primero, o volver a ejecutar luego que arranque la webapp de go las pruebas
          */
         static void Main(string[] args)
+        {
+            //TestDirectSharedMemory();
+            TestRestSharedMemory();
+
+            Console.WriteLine("Ended");
+            Console.ReadLine();
+        }
+
+        private static void TestRestSharedMemory()
+        {
+            SharedMemoryRest.ClearVars();
+            SharedMemoryRest.SetVar("new", 4548);
+            SharedMemoryRest.SetVar("sln", 4458);
+            SharedMemoryRest.SetVar("gug", 45);
+            SharedMemoryRest.SetVar("gag", 40);
+        }
+
+        private static void TestDirectSharedMemory()
         {
             EventMemory eventMemory = new EventMemory(1);
             //EventMemory eventMemory1 = EventMemory.GetSingletonInstace(1);
@@ -23,7 +42,7 @@ namespace SharedMemoryConsole
             for (int i = 0; i < 100; i++)
             {
                 if (i % 25 == 0)
-                {                    
+                {
                     eventMemory = new EventMemory(1);
                 }
                 eventMemory.WriteEvent("Other", "Custom" + i, @"2022-04-08 08:54:23 BIZAGI UPGRADER LOG ----- INFORMATION -- UpdateAsyncTaskTime
@@ -41,10 +60,6 @@ namespace SharedMemoryConsole
 
             //varsMemory.ClearVars();           
             varsMemory.SetVar("new", 4545);
-
-            
-            Console.ReadLine();
         }
-
     }
 }
