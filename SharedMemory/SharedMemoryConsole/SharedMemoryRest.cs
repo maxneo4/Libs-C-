@@ -49,6 +49,25 @@ namespace SharedMemoryConsole
             return result;
         }
 
+        public static void WriteEvent(object value)
+        {
+            WriteEvent(new Event(null, null, DateTime.UtcNow, value));
+        }
+        
+        public static void WriteEvent(string category, object value)
+        {
+            WriteEvent(new Event(category, null, DateTime.UtcNow, value));
+        }
+        public static void WriteEvent(string category, string source, object value)
+        {
+            WriteEvent(new Event(category, source, DateTime.UtcNow, value));
+        }
+
+        private static void WriteEvent(Event ev)
+        {
+            PostWebServiceContentAsync(BaseUrl +"/events", JsonConvert.SerializeObject(ev));            
+        }
+
         private static string GetWebServiceContent(string url)
         {
             var request = (HttpWebRequest)WebRequest.Create(url);
@@ -83,6 +102,22 @@ namespace SharedMemoryConsole
             var response = await client.SendAsync(request);
             client.Dispose();
             return response;
+        }
+
+        internal class Event
+        {
+            public string Category { get; set; }
+            public string Source { get; set; }
+            public DateTime Created { get; set; }
+            public object Value { get; set; }
+
+            public Event(string category, string source, DateTime created, object value)
+            {
+                Category = category;
+                Source = source;
+                Created = created;
+                Value = value;
+            }
         }
     }
 }
