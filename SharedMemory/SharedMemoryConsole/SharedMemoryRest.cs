@@ -1,8 +1,6 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
@@ -11,7 +9,7 @@ namespace SharedMemoryConsole
 {
     internal class SharedMemoryRest
     {
-        private static string BaseUrl { get; } = "http://localhost:8040/sharedmemory";
+        private static string BaseUrl { get; } = "https://sharedmemory.azurewebsites.net/sharedmemory";
 
         public static Dictionary<string, object> GetVars()
         {
@@ -64,33 +62,24 @@ namespace SharedMemoryConsole
         }
 
         private static void WriteEvent(Event ev)
-        {
-            PostWebServiceContentAsync(BaseUrl +"/events", JsonConvert.SerializeObject(ev));            
+        {            
+           PostWebServiceContentAsync(BaseUrl +"/events", JsonConvert.SerializeObject(ev));            
         }
 
         private static string GetWebServiceContent(string url)
         {
-            var request = (HttpWebRequest)WebRequest.Create(url);
-            request.Method = "GET";
-            var response = (HttpWebResponse)request.GetResponse();
-            var stream = response.GetResponseStream();
-            var reader = new StreamReader(stream);
-            var content = reader.ReadToEnd();
-            stream.Close();
-            reader.Close();
-            return content;
+            HttpClient client = new HttpClient();
+            client.BaseAddress = new Uri(url);
+            var content = client.GetAsync("").Result;            
+            return content.Content.ReadAsStringAsync().Result;
         }
 
         private static void PostWebServiceContent(string url, string bodyContent)
         {
-            byte[] buffer = Encoding.UTF8.GetBytes(bodyContent);
-            var request = (HttpWebRequest)WebRequest.Create(url);
-            request.Method = "POST";
-            request.ContentType = "application/json";
-            request.ContentLength = buffer.Length;
-            var reqStream = request.GetRequestStream();
-            reqStream.Write(buffer, 0, buffer.Length);
-            reqStream.Close();
+            HttpClient client = new HttpClient();
+            client.BaseAddress = new Uri(url);
+            StringContent content = new StringContent(bodyContent, Encoding.UTF8, "application/json");
+            var r = client.PostAsync("", content).Result;    
         }
 
         private static async Task<HttpResponseMessage> PostWebServiceContentAsync(string url, string bodyContent)
