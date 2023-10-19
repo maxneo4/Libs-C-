@@ -28,13 +28,12 @@ namespace SharedMemoryConsole
 
         public static void ClearVars()
         {
-            var vars = new Dictionary<string, object>();
-            SetVars(vars);
+            PostWebServiceContent(BaseUrl + "/delete/vars", "");
         }
 
         public static void SetVar(string varName, object value)
         {
-            var vars = GetVars();
+            var vars = new Dictionary<string, object>();
             vars[varName] = value;
             SetVars(vars);           
         }
@@ -45,6 +44,11 @@ namespace SharedMemoryConsole
             object result;
             vars.TryGetValue(varName, out result);
             return result;
+        }
+
+        public static void ClearEvents()
+        {
+            PostWebServiceContent(BaseUrl + "/delete/events", "");
         }
 
         public static void WriteEvent(object value)
@@ -64,6 +68,11 @@ namespace SharedMemoryConsole
         private static void WriteEvent(Event ev)
         {            
            PostWebServiceContentAsync(BaseUrl +"/events", JsonConvert.SerializeObject(ev));            
+        }
+
+        public static void WriteEventAndWait(Event ev)
+        {
+            PostWebServiceContent(BaseUrl + "/events", JsonConvert.SerializeObject(ev));
         }
 
         private static string GetWebServiceContent(string url)
@@ -93,7 +102,7 @@ namespace SharedMemoryConsole
             return response;
         }
 
-        internal class Event
+        public class Event
         {
             public string Category { get; set; }
             public string Source { get; set; }
@@ -105,6 +114,22 @@ namespace SharedMemoryConsole
                 Category = category;
                 Source = source;
                 Created = created;
+                Value = value;
+            }
+
+            public Event(string source, object value)
+            {
+                Category = null;
+                Source = source;
+                Created = DateTime.UtcNow;
+                Value = value;
+            }
+
+            public Event(string category, string source, object value)
+            {
+                Category = category;
+                Source = source;
+                Created = DateTime.UtcNow;
                 Value = value;
             }
         }
